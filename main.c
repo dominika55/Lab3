@@ -312,13 +312,13 @@ int main() {
         }
         
         case 7: {
-        search_item(inventory, item_names);
-        break;
+            search_item(inventory, item_names);
+            break;
     }
 
-    case 8: {
-        writeToFarmerDiary(character_name, inventory, item_names, current_day, current_hour);
-        break;
+        case 8: {
+            writeToFarmerDiary(character_name, inventory, item_names, current_day, current_hour);
+            break;
     }
 }
 }
