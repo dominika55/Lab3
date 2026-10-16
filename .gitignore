@@ -1,0 +1,8 @@
+*.exe
+*.o
+*.out
+.vs/
+*.dSYM/
+diary.txt
+output.txt
+.vscode/
