@@ -39,7 +39,6 @@ void rewind_time(int *current_day, int *current_hour) {
 
     if (scanf("%d", &work_hours) != 1) {
         printf("Ошибка: введите одно целое число\n");
-        while (getchar() != '\n');
         clear_input_buffer();
         return;
     }
@@ -75,7 +74,6 @@ void put_item(int *inventory) {
             
     if (scanf("%d %d", &index, &ID) != 2) {
         printf("Ошибка: введите два целых числа\n");
-        while (getchar() != '\n');
         clear_input_buffer();
         return;
     }    
@@ -131,6 +129,74 @@ void remove_dublicate(int *inventory, char names[][MAX_NAME_LEN]) {
     }
     printf("\nПосле удаления дубликатов:\n");
     for (int i = 0; i < SIZE; ++i) printf("Слот %d: [%d] (%s)\n", i, inventory[i], names[inventory[i]]);
+}
+
+
+
+void search_item(int *inventory, char item_names[][MAX_NAME_LEN]) {
+    char subject_name[MAX_NAME_LEN];
+            
+    printf("Введите название предмета: ");
+
+    if (fgets(subject_name, MAX_NAME_LEN, stdin)) {
+        size_t len = strlen(subject_name);
+        if (subject_name[len - 1] == '\n') {
+            subject_name[len - 1] = '\0';
+        }
+    }
+
+    int foundID = -1;
+    for (int i = 0; i < SIZE; ++i) {
+        if (strcmp(item_names[i], subject_name) == 0) {
+            foundID = i;
+            break;
+        }
+    }
+            
+    int count = 0; 
+            
+    for (int slot = 0; slot < SIZE; ++slot) {
+        // Сравниваем ID предмета в слоте с тем, который мы нашли по названию
+        if (inventory[slot] == foundID) {
+            printf("Слот %d: [%d]\n", slot, inventory[slot]);
+            count++; 
+        }
+    }
+    if (count == 0) printf("Такого предмета нет\n");
+    printf("\n");
+}
+
+
+
+void writeToFarmerDiary(char *character_name, int *inventory, char item_names[][MAX_NAME_LEN], int current_day, int current_hour) {
+    FILE *fp = fopen("diary.txt", "a");
+   
+    if (fp == NULL) {
+        printf("Не удалось открыть diary.txt для дозаписи\n");
+        return;
+    }
+
+    // Ставим курсор в самый конец файла
+    fseek(fp, 0, SEEK_END);
+    
+    // Если файл не пустой (позиция > 0), добавляем два перевода строки
+    if (ftell(fp) > 0) {
+        fprintf(fp, "\n\n"); 
+    }
+
+    fprintf(fp, "Фермер: %s\n", character_name);
+    fprintf(fp, "День: %d, час: %02d:00\n", current_day, current_hour);
+    fprintf(fp, "Предметы в инвентаре:\n");
+
+
+    for (int i = 0; i < SIZE; ++i) {
+        int id = inventory[i];
+        if (id != ITEM_EMPTY && id >= 0 && id < MAX_ITEMS) {
+            fprintf(fp, "   • %s\n", item_names[id]);
+        }
+    }
+    fclose(fp);
+    printf("Сводка успешно записана в diary.txt!\n");
 }
 
 
@@ -197,6 +263,8 @@ int main() {
         printf("4. Положить предмет в слот\n");
         printf("5. Выбросить предмет\n");
         printf("6. Устранение дубликатов \n");
+        printf("7. Поиск предмета в рюкзаке по названию\n");
+        printf("8. Записать состояние в дневник фермера\n");
 
         if (scanf("%d", &menu_item) != 1) {
             printf("Ошибка: введите одно целое число.\n");
@@ -210,7 +278,6 @@ int main() {
         {
 
         case 0: {
-             FILE *fp = fopen("diary.txt", "w");
              return 0;
         }
 
@@ -243,6 +310,16 @@ int main() {
             remove_dublicate(inventory, item_names);
             break;
         }
+        
+        case 7: {
+        search_item(inventory, item_names);
+        break;
     }
+
+    case 8: {
+        writeToFarmerDiary(character_name, inventory, item_names, current_day, current_hour);
+        break;
+    }
+}
 }
 }
