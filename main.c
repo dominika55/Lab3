@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <locale.h>
 #include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
 
 #define SIZE 10
 #define DAY 1
@@ -201,6 +203,87 @@ void writeToFarmerDiary(char *character_name, int *inventory, char item_names[][
 
 
 
+void unpackMap() {
+    FILE* fin = fopen("input.txt", "r");
+    FILE* fout = fopen("output.txt", "w");
+
+    if (fin == NULL) {
+        printf("Ошибка: файл input.txt не найден!\n");
+        return;
+    }
+
+    if (fout == NULL) {
+        printf("Ошибка: не удалось создать файл output.txt\n");
+        fclose(fin);
+        return;
+    }
+
+    char line[256];
+    int expectedLen = -1; // // Сюда запишем длину первой распакованной строки
+    bool success = true;
+
+    while (fgets(line, sizeof(line), fin) != NULL && success) {
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') {
+            line[len - 1] = '\0';
+            len--;
+        }
+
+        int currentLen = 0;
+        int i = 0;
+
+        while (i < len && success) {
+            char currentChar = line[i];
+
+            if (isdigit(currentChar)) {
+                int count = currentChar - '0'; // Превращаем символ в число
+                i++;
+
+                if (i >= len) { 
+                    printf("Ошибка в строке: цифра без символа!\n");
+                    success = false;
+                    break;
+                }
+
+                char symbol = line[i];
+                for (int k = 0; k < count; ++k) {
+                    putchar(symbol);
+                    fprintf(fout, "%c", symbol);
+                    currentLen++;
+                }
+                i++;
+            } else {
+                putchar(currentChar);
+                fprintf(fout, "%c", currentChar);
+                currentLen++;
+                i++;
+            }
+        }
+
+        putchar('\n');
+        fprintf(fout, "\n");
+
+        if (expectedLen == -1)
+            expectedLen = currentLen;
+        else if (currentLen != expectedLen) {
+            printf("Ошибка геометрии: строки разной длины!\n");
+            success = false;
+        }
+    }
+
+    fclose(fin);
+    fclose(fout);
+
+    if (success)
+        printf("Карта успешно распакована в output.txt!\n");
+    else
+        printf("Распаковка завершена с ошибками\n");
+
+    printf("\n");
+}
+
+
+
 int main() {
     setlocale(LC_ALL, "");
 
@@ -265,14 +348,13 @@ int main() {
         printf("6. Устранение дубликатов \n");
         printf("7. Поиск предмета в рюкзаке по названию\n");
         printf("8. Записать состояние в дневник фермера\n");
+        printf("9. Распаковщик карты\n");
 
         if (scanf("%d", &menu_item) != 1) {
             printf("Ошибка: введите одно целое число.\n");
-            while (getchar() != '\n');
+            clear_input_buffer();
             continue;
         }
-        clear_input_buffer();
-
 
         switch (menu_item)
         {
@@ -282,6 +364,7 @@ int main() {
         }
 
         case 1: {
+
             printf("Текущее время: День %d, %02d:00\n", current_day, current_hour);
             break;
         }
@@ -312,14 +395,24 @@ int main() {
         }
         
         case 7: {
-        search_item(inventory, item_names);
-        break;
-    }
+            search_item(inventory, item_names);
+            break;
+        }
 
-    case 8: {
-        writeToFarmerDiary(character_name, inventory, item_names, current_day, current_hour);
-        break;
-    }
+        case 8: {
+            writeToFarmerDiary(character_name, inventory, item_names, current_day, current_hour);
+            break;
+        }
+
+        case 9: {
+            unpackMap();
+            break;
+        }
+
+        default: {
+            printf("Неизвестный пункт меню!\n");
+            break;
+        }
 }
 }
 }
