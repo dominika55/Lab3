@@ -139,6 +139,7 @@ void search_item(int *inventory, char item_names[][MAX_NAME_LEN]) {
     char subject_name[MAX_NAME_LEN];
             
     printf("Введите название предмета: ");
+    clear_input_buffer();
 
     if (fgets(subject_name, MAX_NAME_LEN, stdin)) {
         size_t len = strlen(subject_name);
