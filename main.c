@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #define SIZE 10
 #define DAY 1
@@ -23,6 +24,9 @@
 
 #define MAX_ITEMS 10
 #define MAX_NAME_LEN 20
+
+#define MAX_MAP_SIZE 30
+#define MIN_MAP_SIZE 5
 
 
 
@@ -285,6 +289,55 @@ void unpackMap() {
 
 
 
+void generate_map() {
+    int size;
+    char **map; 
+
+    size = rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1) + MIN_MAP_SIZE;
+    printf("Генерируем карту размером %dx%d\n", size, size);
+
+    map = (char **)malloc(size * sizeof(char *)); 
+
+    if (map == NULL) { 
+        printf("Ошибка: Не хватило памяти для создания строк карты!\n"); 
+        return; 
+    }  
+
+    printf("Память под строки успешно выделена\n"); 
+
+    for (int i = 0; i < size; i++) {
+        map[i] = malloc((size + 1) * sizeof(char)); // выделяем память для каждой строки
+
+        if (map[i] == NULL) {
+            printf("Ошибка: не хватило памяти для строки номер %d\n", i);
+            for (int j = 0; j < i; i++) {
+                free(map[j]);
+            }
+            free(map);
+            return;
+        }
+        
+        for (int j = 0; j < size; j++) { 
+            if (i == 0 || i == size - 1 || j == 0 || j == size - 1) { 
+                map[i][j] = '#'; 
+            } else { 
+                map[i][j] = '.'; 
+            }
+        }
+        map[i][size] = '\0'; 
+    }  
+
+    for (int k = 0; k < size; k++) printf("%s\n", map[k]);
+
+    // Очистка после успешного использования
+    for (int k = 0; k < size; k++) {
+        free(map[k]);
+    }
+    free(map);
+}
+
+
+
 int main() {
     setlocale(LC_ALL, "");
 
@@ -350,6 +403,7 @@ int main() {
         printf("7. Поиск предмета в рюкзаке по названию\n");
         printf("8. Записать состояние в дневник фермера\n");
         printf("9. Распаковщик карты\n");
+        printf("10. Отправиться в приключение\n");
 
         if (scanf("%d", &menu_item) != 1) {
             printf("Ошибка: введите одно целое число.\n");
@@ -407,6 +461,11 @@ int main() {
 
         case 9: {
             unpackMap();
+            break;
+        }
+
+        case 10: {
+            generate_map();
             break;
         }
 
