@@ -373,6 +373,21 @@ bool move_hero(char **map, int size, int *y, int *x, char direction) {
 
 
 
+void draw_map(char **map, int size, int hero_y, int hero_x) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (i == hero_y && j == hero_x) {
+                putchar('@');
+            } else {
+                putchar(map[i][j]);
+            }
+        }
+        putchar('\n'); 
+    }
+}
+
+
+
 int main() {
     setlocale(LC_ALL, "");
 
