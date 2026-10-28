@@ -289,7 +289,7 @@ void unpackMap() {
 
 
 
-char** generate_map(int *out_size) {
+char** generate_map(int *out_size, int *hero_y, int *hero_x) {
     int size = rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1) + MIN_MAP_SIZE;
     *out_size = size;
 
@@ -332,7 +332,9 @@ char** generate_map(int *out_size) {
                 }
                 
                 if (!hero_placed && map[i][j] == '.') {
-                    map[i][j] = '@';      
+                    map[i][j] = '@'; 
+                    *hero_y = i;   
+                    *hero_x = j;      
                     hero_placed = 1; 
                 }
             }
@@ -348,7 +350,7 @@ bool move_hero(char **map, int size, int *y, int *x, char direction) {
     int new_y = *y;
     int new_x = *x;
 
-    // вычисление новых координат
+    
     switch (direction) {
         case 'W': case 'w': new_y--; break;
         case 'S': case 's': new_y++; break;
@@ -364,14 +366,16 @@ bool move_hero(char **map, int size, int *y, int *x, char direction) {
         return false;
     }
 
-    // проверка препятствий 
+
     char cell = map[new_y][new_x];
     if (cell == '#' || cell == 'T' || cell == 'R') {
-        printf("Нельзя пройти! Там препятствие (%c).\n", cell);
+        printf("Нельзя пройти! Там препятствие (%c)\n", cell);
         return false;
     }
 
-    // обновляем реальные координаты
+    map[*y][*x] = '.';           
+    map[new_y][new_x] = '@';
+
     *y = new_y;
     *x = new_x;
     return true;
@@ -520,22 +524,49 @@ int main() {
 
             char **map;
             int map_size;
+            int hero_y, hero_x;
 
-            map = generate_map(&map_size);
+            map = generate_map(&map_size, &hero_y, &hero_x);
 
             if (map == NULL) {
                 printf("Ошибка: не удалось создать карту!\n");
                 break;
             }
 
-            draw_map(map, map_size);
+
+            while(1) {
+                draw_map(map, map_size);
+
+                printf("\n");
+                printf("Направления движения: W (вверх), S (вниз), A (влево), D (вправо). Q - сбежать домой\n");
+                printf("Твой ход (WASD или Q): ");
+
+                char direction;
+
+                if (scanf(" %c", &direction) != 1) {
+                    clear_input_buffer();
+                    continue;
+                }
+
+                if (direction == 'Q' || direction == 'q') {
+                    printf("Ты сбежал домой!\n");
+                    break;
+                }
+
+                bool success = move_hero(map, map_size, &hero_y, &hero_x, direction);
+
+                if (!success) {
+                    printf("Попробуй другое направление\n\n");
+                }
+            }
 
             for (int i = 0; i < map_size; i++) {
                 free(map[i]);
             }
             free(map);
 
-            printf("Карта показана. Возврат в меню\n\n");
+            printf("Карта удалена. Возврат в главное меню\n\n");
+            
             break;
         }
 
