@@ -289,32 +289,35 @@ void unpackMap() {
 
 
 
-void generate_map() {
-    int size;
+char** generate_map(int *out_size) {
+    int size = rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1) + MIN_MAP_SIZE;
+    *out_size = size;
+
     char **map; 
 
-    size = rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1) + MIN_MAP_SIZE;
-    printf("Генерируем карту размером %dx%d\n", size, size);
+    printf("\nГенерируем карту размером %dx%d\n", size, size);
 
     map = (char **)malloc(size * sizeof(char *)); 
 
     if (map == NULL) { 
         printf("Ошибка: Не хватило памяти для создания строк карты!\n"); 
-        return; 
+        return NULL; 
     }  
 
-    printf("Память под строки успешно выделена\n"); 
+    printf("Память под строки успешно выделена\n\n"); 
+
+    int obstacle_chance = rand() % (30 - 15 + 1) + 15; 
 
     for (int i = 0; i < size; i++) {
         map[i] = malloc((size + 1) * sizeof(char)); // выделяем память для каждой строки
 
         if (map[i] == NULL) {
             printf("Ошибка: не хватило памяти для строки номер %d\n", i);
-            for (int j = 0; j < i; i++) {
+            for (int j = 0; j < i; j++) {
                 free(map[j]);
             }
             free(map);
-            return;
+            return NULL;
         }
         
         for (int j = 0; j < size; j++) { 
@@ -322,18 +325,50 @@ void generate_map() {
                 map[i][j] = '#'; 
             } else { 
                 map[i][j] = '.'; 
+
+                if (rand() % 100 < obstacle_chance) {
+                    map[i][j] = (rand() % 2 == 0) ? 'T' : 'R';
+                }
             }
         }
         map[i][size] = '\0'; 
     }  
+    return map; 
+}
 
-    for (int k = 0; k < size; k++) printf("%s\n", map[k]);
 
-    // Очистка после успешного использования
-    for (int k = 0; k < size; k++) {
-        free(map[k]);
+
+bool move_hero(char **map, int size, int *y, int *x, char direction) {
+    int new_y = *y;
+    int new_x = *x;
+
+    // вычисление новых координат
+    switch (direction) {
+        case 'W': case 'w': new_y--; break;
+        case 'S': case 's': new_y++; break;
+        case 'A': case 'a': new_x--; break;
+        case 'D': case 'd': new_x++; break;
+        default:
+            return false; 
     }
-    free(map);
+
+    // защита от Segfault
+    if (new_y < 0 || new_y >= size || new_x < 0 || new_x >= size) {
+        printf("Нельзя идти туда! Попробуй пойти в другую сторону\n");
+        return false;
+    }
+
+    // проверка препятствий 
+    char cell = map[new_y][new_x];
+    if (cell == '#' || cell == 'T' || cell == 'R') {
+        printf("Нельзя пройти! Там препятствие (%c).\n", cell);
+        return false;
+    }
+
+    // обновляем реальные координаты
+    *y = new_y;
+    *x = new_x;
+    return true;
 }
 
 
@@ -465,7 +500,6 @@ int main() {
         }
 
         case 10: {
-            generate_map();
             break;
         }
 
