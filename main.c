@@ -306,7 +306,8 @@ char** generate_map(int *out_size) {
 
     printf("Память под строки успешно выделена\n\n"); 
 
-    int obstacle_chance = rand() % (30 - 15 + 1) + 15; 
+    int obstacle_chance = rand() % (30 - 15 + 1) + 15;
+    int hero_placed = 0;
 
     for (int i = 0; i < size; i++) {
         map[i] = malloc((size + 1) * sizeof(char)); // выделяем память для каждой строки
@@ -328,6 +329,11 @@ char** generate_map(int *out_size) {
 
                 if (rand() % 100 < obstacle_chance) {
                     map[i][j] = (rand() % 2 == 0) ? 'T' : 'R';
+                }
+                
+                if (!hero_placed && map[i][j] == '.') {
+                    map[i][j] = '@';      
+                    hero_placed = 1; 
                 }
             }
         }
@@ -373,14 +379,10 @@ bool move_hero(char **map, int size, int *y, int *x, char direction) {
 
 
 
-void draw_map(char **map, int size, int hero_y, int hero_x) {
+void draw_map(char **map, int size) {
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-            if (i == hero_y && j == hero_x) {
-                putchar('@');
-            } else {
-                putchar(map[i][j]);
-            }
+            putchar(map[i][j]);
         }
         putchar('\n'); 
     }
@@ -515,6 +517,25 @@ int main() {
         }
 
         case 10: {
+
+            char **map;
+            int map_size;
+
+            map = generate_map(&map_size);
+
+            if (map == NULL) {
+                printf("Ошибка: не удалось создать карту!\n");
+                break;
+            }
+
+            draw_map(map, map_size);
+
+            for (int i = 0; i < map_size; i++) {
+                free(map[i]);
+            }
+            free(map);
+
+            printf("Карта показана. Возврат в меню\n\n");
             break;
         }
 
