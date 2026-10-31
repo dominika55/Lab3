@@ -27,9 +27,11 @@
 #define MAX_NAME_LEN 20
 
 #define MAX_MAP_SIZE 30
-#define MIN_MAP_SIZE 5
+#define MIN_MAP_SIZE 5 
 
 #define ABYSS ' ' 
+#define MIN_VERGE 15
+#define MAX_VERGE 30
 
 
 
@@ -255,7 +257,7 @@ char** generate_map(int *out_size, int *hero_y, int *hero_x) {
     map = (char **)malloc(size * sizeof(char *));
     if (map == NULL) { printf("Ошибка памяти!\n"); return NULL; }
 
-    int obstacle_chance = rand() % (30 - 15 + 1) + 15;
+    int obstacle_chance = rand() % (MAX_VERGE - MIN_VERGE + 1) + MIN_VERGE;
     int hero_placed = 0;
 
     for (int i = 0; i < size; i++) {
@@ -276,7 +278,7 @@ char** generate_map(int *out_size, int *hero_y, int *hero_x) {
                 if (rand() % 100 < obstacle_chance)
                     map[i][j] = (rand() % 2 == 0) ? 'T' : 'R';
 
-                if (!hero_placed && map[i][j] == '.') {
+                if (!hero_placed && map[i][j] == '.' && i == size/2 && j == size/2) {
                     map[i][j] = '@';
                     *hero_y = i;
                     *hero_x = j;
@@ -369,8 +371,7 @@ void collapse_perimeter(char **map, int size, int level) {
     for (int i = 0; i < size; ++i)
         for (int j = 0; j < size; ++j)
             if (i == top || i == bottom || j == left || j == right) {
-                if (map[i][j] == 'D') continue; // не рушим выход D (если он на границе)
-                map[i][j] = ABYSS;
+                map[i][j] = ABYSS;  
             }
 }
 
@@ -420,16 +421,9 @@ void collapsing_tower() {
             continue;
         }
 
-        // Блокировка WASD в режиме эвакуации
-        if (stair_lost) {
-            printf("\n⛔ Башня рушится! Только Q!\n");
-            continue;
-        }
 
-        // если препятствие 
         if (!move_hero(map, map_size, &hero_y, &hero_x, direction)) continue;
         turn_count++;
-
 
         if (map[hero_y][hero_x] == 'U') {
             printf("\nТы нашел лестницу! Переходим на следующий этаж...\n");
@@ -463,21 +457,25 @@ void collapsing_tower() {
                 if (stair_exists) break;
             }
 
-            if (!stair_exists) {
-                // U провалилась — эвакуация
+            bool exit_exists = false;
+            for (int i = 0; i < map_size; i++) {
+                for (int j = 0; j < map_size; j++)
+                    if (map[i][j] == 'D') { exit_exists = true; break; }
+                if (exit_exists) break;
+            }
+
+            if (!stair_exists && !exit_exists) {
+                printf("\n💥 Обе лестницы провалились! Тебе не выбраться... Нажми Q\n");
                 stair_lost = true;
+                continue;
+            }
 
-                // Стираем все D
-                for (int i = 0; i < map_size; i++)
-                    for (int j = 0; j < map_size; j++)
-                        if (map[i][j] == 'D') map[i][j] = '.';
-
-                // Ставим D под героем
-                map[hero_y][hero_x] = 'D';
-
+            if (!stair_exists && !stair_lost) {
+                stair_lost = true;
                 printf("\n💥 Лестница U провалилась в бездну!\n");
-                printf("Башня рушится! Выход D теперь под тобой. Нажми Q!\n\n");
-            } else {
+                printf("Башня рушится! Нажми Q!\n\n");
+
+            } else if (stair_exists) {
                 printf("Карта сужается к центру.\n");
             }
 
